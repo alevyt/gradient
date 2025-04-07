@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gradient Text Printer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    #result-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      min-height: 100px;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    @page {
+      size: A4 portrait;
+    }
+
+    @media print {
+      #print-area svg {
+        width: 100% !important;
+        height: auto !important;
+      }
+    }
+
+
+    @media print {
+      body *:not(#print-area) {
+        display: none !important;
+      }
+
+      #print-area {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Printable Gradient Text</h2>
+
+  <div class="controls">
+    <label>
+      Enter text:
+      <textarea id="text-input" rows="4" cols="50">Hello, world!</textarea>
+    </label>
+
+    <label>
+      Font family:
+      <select id="font-family">
+        <option value="Arial">Arial</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Courier New">Courier New</option>
+        <option value="Times New Roman">Times New Roman</option>
+        <option value="Verdana">Verdana</option>
+      </select>
+    </label>
+
+    <label>
+      Font size:
+      <input type="number" id="font-size" value="48" min="8" max="200"/> px
+    </label>
+
+    <label>
+      Text alignment:
+      <select id="text-align">
+        <option value="start">Left</option>
+        <option value="middle">Center</option>
+        <option value="end">Right</option>
+      </select>
+    </label>
+    <label>
+      Orientation:
+      <select id="orientation">
+        <option value="portrait">Portrait</option>
+        <option value="landscape" selected>Landscape</option>
+      </select>
+    </label>
+    
+
+    <button onclick="exportSVG()">Export SVG</button>
+    <button onclick="exportPNG()">Export PNG</button>
+    <button onclick="exportPDF()">Export PDF</button>
+
+    <button onclick="updatePreview()">Apply</button>
+    <button onclick="window.print()">Print</button>
+
+
+  </div>
+
+  <div id="result-container">
+    <div id="print-area"></div>
+  </div>
+
+  <script>
+    function updatePreview() {
+      const text = document.getElementById("text-input").value;
+      const fontFamily = document.getElementById("font-family").value;
+      const fontSize = parseInt(document.getElementById("font-size").value, 10);
+      const textAlign = document.getElementById("text-align").value;
+      const orientation = document.getElementById("orientation").value;
+
+      const A4_WIDTH = orientation === "landscape" ? 1123 : 794;
+      const A4_HEIGHT = orientation === "landscape" ? 794 : 1123;
+
+      const svgWidth = A4_WIDTH;
+      const svgHeight = fontSize * 2 + 40;
+
+
+      let xPos = 10;
+      if (textAlign === 'middle') xPos = svgWidth / 2;
+      else if (textAlign === 'end') xPos = svgWidth - 10;
+
+      // Clear previous SVG
+      const container = document.getElementById("print-area");
+      container.innerHTML = "";
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", svgWidth);
+      svg.setAttribute("height", svgHeight);
+      svg.setAttribute("xmlns", svgNS);
+      svg.setAttribute("version", "1.1");
+
+      const defs = document.createElementNS(svgNS, "defs");
+      const linearGradient = document.createElementNS(svgNS, "linearGradient");
+      linearGradient.setAttribute("id", "textGradient");
+      linearGradient.setAttribute("x1", "0%");
+      linearGradient.setAttribute("y1", "0%");
+      linearGradient.setAttribute("x2", "100%");
+      linearGradient.setAttribute("y2", "0%");
+
+      const stop1 = document.createElementNS(svgNS, "stop");
+      stop1.setAttribute("offset", "0%");
+      stop1.setAttribute("stop-color", "red");
+
+      const stop2 = document.createElementNS(svgNS, "stop");
+      stop2.setAttribute("offset", "100%");
+      stop2.setAttribute("stop-color", "blue");
+
+      linearGradient.appendChild(stop1);
+      linearGradient.appendChild(stop2);
+      defs.appendChild(linearGradient);
+      svg.appendChild(defs);
+
+      const textElem = document.createElementNS(svgNS, "text");
+      textElem.setAttribute("x", xPos);
+      textElem.setAttribute("y", fontSize);
+      textElem.setAttribute("font-family", fontFamily);
+      textElem.setAttribute("font-size", fontSize);
+      textElem.setAttribute("fill", "url(#textGradient)");
+      textElem.setAttribute("text-anchor", textAlign);
+      const lines = text.split("\n");
+      lines.forEach((line, i) => {
+        const tspan = document.createElementNS(svgNS, "tspan");
+        tspan.setAttribute("x", "50%");
+        tspan.setAttribute("dy", i === 0 ? "0" : `${fontSize * 1.2}`);
+        tspan.setAttribute("text-anchor", {
+          left: "start",
+          center: "middle",
+          right: "end"
+        }[textAlign]);
+        tspan.textContent = line;
+        textElem.appendChild(tspan);
+      });
+
+
+      svg.appendChild(textElem);
+      container.appendChild(svg);
+      const styleTag = document.getElementById("dynamicPrintStyle") || document.createElement("style");
+      styleTag.id = "dynamicPrintStyle";
+      styleTag.textContent = `@page { size: A4 ${orientation}; }`;
+      document.head.appendChild(styleTag);
+
+    }
+    updatePreview();
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    function exportSVG() {
+      const svg = document.querySelector("#print-area svg");
+      const serializer = new XMLSerializer();
+      const source = serializer.serializeToString(svg);
+      const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "gradient-text.svg";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  
+    function exportPNG() {
+      const svgElem = document.querySelector("#print-area svg");
+      const svgData = new XMLSerializer().serializeToString(svgElem);
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+      const url = URL.createObjectURL(svgBlob);
+  
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = svgElem.width.baseVal.value;
+        canvas.height = svgElem.height.baseVal.value;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+  
+        canvas.toBlob(function(blob) {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "gradient-text.png";
+          a.click();
+        });
+      };
+      img.src = url;
+    }
+  
+    async function exportPDF() {
+      const orientation = document.getElementById("orientation").value;
+      const svgElem = document.querySelector("#print-area");
+      const canvas = await html2canvas(svgElem);
+      const imgData = canvas.toDataURL("image/png");
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: orientation,
+        unit: "pt",
+        format: "a4"
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
+      pdf.save("gradient-text.pdf");
+    }
+
+  </script>
+  
+</body>
+</html>
