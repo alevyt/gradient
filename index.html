@@ -38,6 +38,10 @@
       }
     }
 
+    .shadow-text {
+      fill: rgba(0, 0, 0, 0.5);
+    }
+
 
     @media print {
       body *:not(#print-area) {
@@ -182,6 +186,32 @@
           right: "end"
         }[textAlign]);
         tspan.textContent = line;
+        const shadowEl = document.createElementNS(svgNS, "text");
+        shadowEl.setAttribute("x", "50%");
+        shadowEl.setAttribute("y", svgHeight / 2 + 2); // 2px offset for shadow
+        shadowEl.setAttribute("dominant-baseline", "middle");
+        shadowEl.setAttribute("class", "shadow-text");
+        shadowEl.setAttribute("font-size", fontSize);
+        shadowEl.setAttribute("font-family", fontFamily);
+        shadowEl.setAttribute("text-anchor", {
+          left: "start",
+          center: "middle",
+          right: "end"
+        }[textAlign]);
+        
+        lines.forEach((line, i) => {
+          const tspan = document.createElementNS(svgNS, "tspan");
+          tspan.setAttribute("x", "50%");
+          tspan.setAttribute("dy", i === 0 ? "0" : `${fontSize * 1.2}`);
+          tspan.setAttribute("text-anchor", {
+            left: "start",
+            center: "middle",
+            right: "end"
+          }[textAlign]);
+          tspan.textContent = line;
+          shadowEl.appendChild(tspan.cloneNode(true));
+        });
+        svg.appendChild(shadowEl);
         textElem.appendChild(tspan);
       });
 
