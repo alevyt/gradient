@@ -39,7 +39,8 @@
     }
 
     .shadow-text {
-      fill: rgba(0, 0, 0, 0.5);
+      fill: rgba(0, 0, 0, 0.3);
+      transform: skewX(31deg) translate(-30px, -34px);
     }
 
 
@@ -175,6 +176,7 @@
       textElem.setAttribute("font-size", fontSize);
       textElem.setAttribute("fill", "url(#textGradient)");
       textElem.setAttribute("text-anchor", textAlign);
+
       const lines = text.split("\n");
       lines.forEach((line, i) => {
         const tspan = document.createElementNS(svgNS, "tspan");
@@ -188,16 +190,12 @@
         tspan.textContent = line;
         const shadowEl = document.createElementNS(svgNS, "text");
         shadowEl.setAttribute("x", "50%");
-        shadowEl.setAttribute("y", svgHeight / 2 + 2); // 2px offset for shadow
+        shadowEl.setAttribute("y", svgHeight / 2 + 2);
         shadowEl.setAttribute("dominant-baseline", "middle");
         shadowEl.setAttribute("class", "shadow-text");
         shadowEl.setAttribute("font-size", fontSize);
         shadowEl.setAttribute("font-family", fontFamily);
-        shadowEl.setAttribute("text-anchor", {
-          left: "start",
-          center: "middle",
-          right: "end"
-        }[textAlign]);
+        shadowEl.setAttribute("text-anchor", textAlign);
         
         lines.forEach((line, i) => {
           const tspan = document.createElementNS(svgNS, "tspan");
